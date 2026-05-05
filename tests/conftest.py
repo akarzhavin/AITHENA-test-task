@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import pytest
-from llama_index.core.prompts import PromptTemplate
+from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 
 from analyzer.models import (
@@ -25,8 +25,9 @@ T = TypeVar("T", bound=BaseModel)
 class FakeLLMClient:
     """A controllable fake that satisfies the LLMClient protocol.
 
-    Supports two response modes matching the real client:
+    Supports three response modes matching the real client:
     - ``astructured_predict`` → returns pre-enqueued Pydantic model instances
+    - ``apredict``            → returns pre-enqueued plain strings from template
     - ``acomplete``           → returns pre-enqueued plain strings
     """
 
@@ -49,7 +50,7 @@ class FakeLLMClient:
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate,
+        prompt: PromptTemplate | ChatPromptTemplate,
         **prompt_kwargs,
     ) -> T:
         """Return the next queued Pydantic model instance."""
@@ -64,6 +65,19 @@ class FakeLLMClient:
         raise TypeError(
             f"FakeLLMClient: expected {output_cls.__name__} or dict, got {type(resp).__name__}"
         )
+
+    async def apredict(
+        self,
+        prompt: PromptTemplate | ChatPromptTemplate,
+        **prompt_kwargs,
+    ) -> str:
+        """Return the next queued string."""
+        formatted = prompt.format(**prompt_kwargs)
+        self.prompts.append(formatted)
+        resp = self._next()
+        if isinstance(resp, str):
+            return resp
+        raise TypeError(f"FakeLLMClient: expected str for apredict, got {type(resp).__name__}")
 
     async def acomplete(self, prompt: str) -> str:
         """Return the next queued string."""

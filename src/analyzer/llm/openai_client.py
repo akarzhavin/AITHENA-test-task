@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TypeVar
 
-from llama_index.core.prompts import PromptTemplate
+from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from llama_index.llms.openai import OpenAI
 from pydantic import BaseModel
 
@@ -38,7 +38,7 @@ class OpenAIClient:
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate,
+        prompt: PromptTemplate | ChatPromptTemplate,
         **prompt_kwargs,
     ) -> T:
         """Structured prediction — returns a validated Pydantic instance."""
@@ -47,6 +47,14 @@ class OpenAIClient:
             prompt,
             **prompt_kwargs,
         )
+
+    async def apredict(
+        self,
+        prompt: PromptTemplate | ChatPromptTemplate,
+        **prompt_kwargs,
+    ) -> str:
+        """Plain-text prediction from template (supports roles)."""
+        return await self._llm.apredict(prompt, **prompt_kwargs)
 
     async def acomplete(self, prompt: str) -> str:
         """Plain-text completion."""

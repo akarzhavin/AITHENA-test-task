@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Protocol, TypeVar, runtime_checkable
 
-from llama_index.core.prompts import PromptTemplate
+from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -21,10 +21,18 @@ class LLMClient(Protocol):
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate,
+        prompt: PromptTemplate | ChatPromptTemplate,
         **prompt_kwargs,
     ) -> T:
         """Return a Pydantic model instance from structured LLM output."""
+        ...
+
+    async def apredict(
+        self,
+        prompt: PromptTemplate | ChatPromptTemplate,
+        **prompt_kwargs,
+    ) -> str:
+        """Return a plain-text completion from a prompt template (supports roles)."""
         ...
 
     async def acomplete(self, prompt: str) -> str:

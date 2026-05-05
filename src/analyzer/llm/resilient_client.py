@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, TypeVar
 
-from llama_index.core.prompts import PromptTemplate
+from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 
 from analyzer.llm.protocol import LLMClient
@@ -25,7 +25,7 @@ class ResilientLLMClient:
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate,
+        prompt: PromptTemplate | ChatPromptTemplate,
         **prompt_kwargs: Any,
     ) -> T:
         """Retry structured prediction on failure."""
@@ -39,6 +39,26 @@ class ResilientLLMClient:
             except Exception as e:
                 if attempt == self._max_retries:
                     logger.error(f"Final attempt failed for structured prediction: {e}")
+                    raise
+                logger.warning(f"LLM attempt {attempt + 1} failed: {e}. Retrying...")
+
+        raise RuntimeError("Unreachable")
+
+    async def apredict(
+        self,
+        prompt: PromptTemplate | ChatPromptTemplate,
+        **prompt_kwargs: Any,
+    ) -> str:
+        """Retry plain-text prediction on failure."""
+        for attempt in range(self._max_retries + 1):
+            try:
+                return await self._base_client.apredict(
+                    prompt,
+                    **prompt_kwargs,
+                )
+            except Exception as e:
+                if attempt == self._max_retries:
+                    logger.error(f"Final attempt failed for apredict: {e}")
                     raise
                 logger.warning(f"LLM attempt {attempt + 1} failed: {e}. Retrying...")
 

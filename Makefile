@@ -1,4 +1,4 @@
-.PHONY: setup install test run docker-run clean lint format
+.PHONY: setup install test test-live run docker-run clean lint format
 
 # Variables
 VENV = .venv
@@ -12,7 +12,8 @@ MYPY = $(VENV)/bin/mypy
 help:
 	@echo "Available commands:"
 	@echo "  make setup       - Create virtual environment and install dependencies"
-	@echo "  make test        - Run automated tests (via pytest)"
+	@echo "  make test        - Run automated tests (excluding live LLM calls)"
+	@echo "  make test-live   - Run live acceptance tests (calls real LLM APIs)"
 	@echo "  make run         - Run analysis locally"
 	@echo "  make run-rewrite - Run analysis locally with force rewrite (overwrites results)"
 	@echo "  make lint        - Check code with linters (ruff, mypy)"
@@ -29,7 +30,10 @@ setup:
 
 # Run tests locally
 test:
-	$(PYTEST) -v
+	$(PYTEST) -v -m "not live"
+
+test-live:
+	$(PYTEST) -v -m "live"
 
 # Linting and formatting
 lint:

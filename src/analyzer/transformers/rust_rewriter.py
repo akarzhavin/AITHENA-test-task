@@ -30,6 +30,5 @@ class RustLLMRewriter:
         self._llm = llm
 
     async def rewrite(self, source_code: str, filename: str) -> RustRewrite:
-        prompt = RUST_REWRITE_PROMPT.format(source_code=source_code)
-        rust_code = await self._llm.acomplete(prompt)
+        rust_code = await self._llm.apredict(RUST_REWRITE_PROMPT, source_code=source_code)
         return RustRewrite(rust_code=rust_code.strip(), source_file=filename)
