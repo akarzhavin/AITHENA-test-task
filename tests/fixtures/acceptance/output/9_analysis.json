@@ -1,0 +1,15 @@
+{
+  "file": "9.py",
+  "license_info": {
+    "copyright_holder": "Modern Dev",
+    "license_name": "MIT License",
+    "category": "permissive"
+  },
+  "total_functions_in_file": 1,
+  "extracted_functions": [
+    {
+      "name": "decorator",
+      "num_args": 1
+    }
+  ]
+}

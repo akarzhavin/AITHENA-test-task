@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "analyzer"
+version = "0.1.0"
+description = "Code analysis pipeline — license detection, function extraction, and Rust rewriting via LLM"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0,<3",
+    "pydantic-settings>=2.0,<3",
+    "llama-index-core>=0.12,<1",
+    "llama-index-llms-openai>=0.3,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+exclude = [".venv", "data", "tests/fixtures/acceptance/data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+packages = ["analyzer"]
+mypy_path = "src"
+exclude = ["data", "tests/fixtures/acceptance/data"]
+explicit_package_bases = true
+check_untyped_defs = true
+disallow_untyped_defs = false

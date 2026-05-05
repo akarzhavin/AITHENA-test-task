@@ -1,0 +1,15 @@
+{
+  "file": "7.py",
+  "license_info": {
+    "copyright_holder": "",
+    "license_name": "",
+    "category": "unknown"
+  },
+  "total_functions_in_file": 1,
+  "extracted_functions": [
+    {
+      "name": "secret_function",
+      "num_args": 1
+    }
+  ]
+}

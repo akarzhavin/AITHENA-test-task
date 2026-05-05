@@ -1,0 +1,19 @@
+{
+  "file": "15.tsx",
+  "license_info": {
+    "copyright_holder": "React Team",
+    "license_name": "Apache License 2.0",
+    "category": "permissive"
+  },
+  "total_functions_in_file": 1,
+  "extracted_functions": [
+    {
+      "name": "Profile",
+      "num_args": 1
+    },
+    {
+      "name": "handleClick",
+      "num_args": 1
+    }
+  ]
+}

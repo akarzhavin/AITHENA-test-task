@@ -1,0 +1,23 @@
+{
+  "file": "14.js",
+  "license_info": {
+    "copyright_holder": "JS Master",
+    "license_name": "MIT License",
+    "category": "permissive"
+  },
+  "total_functions_in_file": 2,
+  "extracted_functions": [
+    {
+      "name": "add",
+      "num_args": 2
+    },
+    {
+      "name": "subtract",
+      "num_args": 2
+    },
+    {
+      "name": "greet",
+      "num_args": 1
+    }
+  ]
+}

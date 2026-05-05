@@ -1,0 +1,23 @@
+{
+  "file": "4.py",
+  "license_info": {
+    "copyright_holder": "Test Lab",
+    "license_name": "AGPL-3.0",
+    "category": "copyleft"
+  },
+  "total_functions_in_file": 3,
+  "extracted_functions": [
+    {
+      "name": "one",
+      "num_args": 0
+    },
+    {
+      "name": "two",
+      "num_args": 1
+    },
+    {
+      "name": "three",
+      "num_args": 2
+    }
+  ]
+}

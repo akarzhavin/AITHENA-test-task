@@ -1,0 +1,15 @@
+{
+  "file": "10.py",
+  "license_info": {
+    "copyright_holder": "BSD Foundation",
+    "license_name": "BSD-3-Clause",
+    "category": "permissive"
+  },
+  "total_functions_in_file": 1,
+  "extracted_functions": [
+    {
+      "name": "logic",
+      "num_args": 1
+    }
+  ]
+}

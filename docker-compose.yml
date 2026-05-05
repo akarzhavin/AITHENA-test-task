@@ -1,0 +1,13 @@
+services:
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Подключаем файл .env, в котором должен лежать OPENAI_API_KEY
+    env_file:
+      - .env
+    # Пробрасываем папки data/ и output/, чтобы контейнер читал входные
+    # файлы с хоста и сохранял результаты обратно на хост
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output

@@ -1,0 +1,27 @@
+{
+  "file": "2.py",
+  "license_info": {
+    "copyright_holder": "Guido Musk",
+    "license_name": "GNU General Public License v3.0",
+    "category": "copyleft"
+  },
+  "total_functions_in_file": 5,
+  "extracted_functions": [
+    {
+      "name": "foo",
+      "num_args": 3
+    },
+    {
+      "name": "bar",
+      "num_args": 1
+    },
+    {
+      "name": "foo1",
+      "num_args": 1
+    },
+    {
+      "name": "bar1",
+      "num_args": 1
+    }
+  ]
+}

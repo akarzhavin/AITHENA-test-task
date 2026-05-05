@@ -1,0 +1,8 @@
+# Исключения для Docker
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+output/
+.git/
+.env

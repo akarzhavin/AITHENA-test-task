@@ -1,0 +1,15 @@
+{
+  "file": "11.py",
+  "license_info": {
+    "copyright_holder": "Argument King",
+    "license_name": "MIT License",
+    "category": "permissive"
+  },
+  "total_functions_in_file": 1,
+  "extracted_functions": [
+    {
+      "name": "variadic",
+      "num_args": 2
+    }
+  ]
+}
