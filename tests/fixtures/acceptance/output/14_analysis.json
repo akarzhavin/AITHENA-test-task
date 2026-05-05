@@ -5,7 +5,7 @@
     "license_name": "MIT License",
     "category": "permissive"
   },
-  "total_functions_in_file": 2,
+  "total_functions_in_file": 3,
   "extracted_functions": [
     {
       "name": "add",

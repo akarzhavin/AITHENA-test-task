@@ -6,9 +6,9 @@ import logging
 import re
 from typing import Protocol, runtime_checkable
 
-from analyzer.llm.protocol import LLMClient
-from analyzer.models import LicenseCategory, LicenseInfo
 from analyzer.extractors.license_registry import SPDX_CATEGORY_MAP
+from analyzer.llm.protocol import LLMClient
+from analyzer.models import LicenseInfo
 from analyzer.prompts import LICENSE_EXTRACTION_PROMPT
 
 logger = logging.getLogger(__name__)

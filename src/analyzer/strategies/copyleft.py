@@ -32,7 +32,8 @@ class CopyleftStrategy:
         self._function_threshold = function_threshold
 
     async def analyse(self, source_code: str, filename: str) -> StrategyOutput:
-        # We use the extractor to get an accurate count (handles multiple languages via LLM fallback)
+        # We use the extractor to get an accurate count
+        # (handles multiple languages via LLM fallback)
         functions = await self._function_extractor.extract(source_code)
         num_functions = functions.effective_count
 

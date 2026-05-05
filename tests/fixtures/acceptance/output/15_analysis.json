@@ -5,7 +5,7 @@
     "license_name": "Apache License 2.0",
     "category": "permissive"
   },
-  "total_functions_in_file": 1,
+  "total_functions_in_file": 2,
   "extracted_functions": [
     {
       "name": "Profile",

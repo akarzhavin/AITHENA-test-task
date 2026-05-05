@@ -66,7 +66,7 @@ class TestCopyleftStrategy:
         fake_llm.enqueue(FunctionList(functions=[FunctionSignature(name="only_one", num_args=0)]))
         # 2. Enqueue response for rewrite()
         fake_llm.enqueue('fn only_one() {\n    println!("I am alone");\n}')
-        
+
         strategy = self._get_strategy(fake_llm, threshold=2)
         result = await strategy.analyse(sample_copyleft_few, "few.py")
 
