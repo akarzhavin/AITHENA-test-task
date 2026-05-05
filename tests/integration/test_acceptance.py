@@ -110,9 +110,20 @@ def _enqueue_strategy_responses(
 
     # ALL strategies now call function_extractor.extract() to get the count.
     # We only need to enqueue if it triggers an LLM call (non-python or specific fallback).
-    if not is_python or data_file.stem == "3":
-        functions = [FunctionSignature(**fn) for fn in golden_data.get("extracted_functions", [])]
-        fake_llm.enqueue(FunctionList(functions=functions))
+    if not is_python or data_file.stem in ("3", "18", "19"):
+        if "extracted_functions" in golden_data:
+            functions = [
+                FunctionSignature(**fn) for fn in golden_data["extracted_functions"]
+            ]
+        else:
+            # For Rust rewrite cases, we might not have the list in golden,
+            # but we need the count to be correct for strategy branching.
+            functions = [
+                FunctionSignature(name=f"stub_{i}", num_args=0)
+                for i in range(count)
+            ]
+
+        fake_llm.enqueue(FunctionList(functions=functions, total_count=len(functions)))
 
     # Handle Rust rewrite for copyleft <= 2
     if is_copyleft and count <= 2:
