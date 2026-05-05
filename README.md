@@ -17,7 +17,7 @@ Production-grade code analysis pipeline for automated license identification, fu
 ## 🛠 Tech Stack
 
 - **Core**: Python 3.12+
-- **LLM Orchestration**: LlamaIndex (structured prediction)
+- **LLM Orchestration**: OpenAI SDK (Structured Outputs)
 - **Data Validation**: Pydantic v2
 - **Testing**: Pytest & Asyncio
 - **Rewriting Engine**: LLM-powered Rust translation
@@ -75,6 +75,10 @@ The project follows a modular, strategy-based architecture:
 - `strategies/`: Domain logic for different license categories.
 - `transformers/`: Code-to-code translation logic (e.g., Rust rewriter).
 - `persistence/`: Pluggable writers for results (JSON, etc.).
+
+## 📝 Assumptions
+
+A duplicate of the `bar1` function was found in one of the source files. Since the requirements do not specify how to handle this case, the decision was made to deduplicate functions during the structured data generation phase, as the Python interpreter itself overwrites previous definitions with the latest one.
 
 ---
 *Created as part of the AITHENA Technical Task.*

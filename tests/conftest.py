@@ -1,4 +1,4 @@
-"""Shared test fixtures and fake LLM client (LlamaIndex-compatible)."""
+"""Shared test fixtures and fake LLM client (OpenAI-compatible)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import pytest
-from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 
 from analyzer.models import (
@@ -50,11 +49,12 @@ class FakeLLMClient:
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs,
     ) -> T:
         """Return the next queued Pydantic model instance."""
-        formatted = prompt.format(**prompt_kwargs)
+        # Simulate formatting for spying on prompts in tests
+        formatted = "\n".join(m["content"].format(**prompt_kwargs) for m in messages)
         self.prompts.append(formatted)
         resp = self._next()
         if isinstance(resp, output_cls):
@@ -68,11 +68,11 @@ class FakeLLMClient:
 
     async def apredict(
         self,
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs,
     ) -> str:
         """Return the next queued string."""
-        formatted = prompt.format(**prompt_kwargs)
+        formatted = "\n".join(m["content"].format(**prompt_kwargs) for m in messages)
         self.prompts.append(formatted)
         resp = self._next()
         if isinstance(resp, str):

@@ -1,7 +1,6 @@
 """Unit tests for ResilientLLMClient decorator."""
 
 import pytest
-from llama_index.core.prompts import PromptTemplate
 from tenacity import stop_after_attempt
 
 from analyzer.llm.resilient_client import ResilientLLMClient
@@ -73,6 +72,8 @@ class TestResilientLLMClient:
         fake = ActionableFake([RuntimeError("Fail"), expected])
         client = ResilientLLMClient(fake, max_retries=2, wait_strategy=stop_after_attempt(0))
 
-        result = await client.astructured_predict(LicenseInfo, PromptTemplate("test"))
+        result = await client.astructured_predict(
+            LicenseInfo, [{"role": "user", "content": "test"}]
+        )
         assert result == expected
         assert fake.calls == 2

@@ -1,7 +1,6 @@
 import logging
 from typing import Any, TypeVar
 
-from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 from tenacity import (
     AsyncRetrying,
@@ -39,7 +38,7 @@ class ResilientLLMClient:
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs: Any,
     ) -> T:
         """Retry structured prediction on failure."""
@@ -47,21 +46,21 @@ class ResilientLLMClient:
             with attempt:
                 return await self._base_client.astructured_predict(
                     output_cls,
-                    prompt,
+                    messages,
                     **prompt_kwargs,
                 )
         raise RuntimeError("Unreachable")
 
     async def apredict(
         self,
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs: Any,
     ) -> str:
         """Retry plain-text prediction on failure."""
         async for attempt in self._retrier:
             with attempt:
                 return await self._base_client.apredict(
-                    prompt,
+                    messages,
                     **prompt_kwargs,
                 )
         raise RuntimeError("Unreachable")

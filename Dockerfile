@@ -13,15 +13,28 @@ RUN groupadd -r appgroup && useradd -r -g appgroup -s /sbin/nologin -d /app appu
 
 WORKDIR /app
 
-# Upgrade pip and install dependencies as root
-RUN pip install --upgrade pip --no-cache-dir
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Copy project manifest and source code
-COPY pyproject.toml .
+# Install Poetry
+ENV POETRY_VERSION=2.4.0 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+
+# Copy project manifest
+COPY pyproject.toml poetry.lock README.md ./
+
+# Install dependencies
+RUN poetry install --no-root --with dev
+
+# Copy source code
 COPY src/ /app/src/
 
-# Install the package and its dependencies (including dev tools for tests/linting)
-RUN pip install --no-cache-dir ".[dev]"
+# Install the project itself
+RUN poetry install --with dev
 
 # Create data and output directories with correct permissions for appuser
 RUN mkdir -p /app/data /app/output && \

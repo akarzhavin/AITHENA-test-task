@@ -1,4 +1,4 @@
-"""Function signature extraction via LLM (LlamaIndex structured prediction)."""
+"""Function signature extraction via LLM (Structured Outputs)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ class FunctionExtractor(Protocol):
 
 
 class FunctionLLMExtractor:
-    """Extracts function signatures from source code using LlamaIndex structured prediction."""
+    """Extracts function signatures from source code using LLM structured prediction."""
 
     def __init__(self, llm: LLMClient) -> None:
         self._llm = llm

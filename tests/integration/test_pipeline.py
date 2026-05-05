@@ -1,4 +1,4 @@
-"""Integration test for the full pipeline using fake LLM (LlamaIndex-based)."""
+"""Integration tests for the analysis pipeline (OpenAI-based)."""
 
 import json
 

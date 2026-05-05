@@ -1,30 +1,27 @@
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "analyzer"
 version = "0.1.0"
 description = "Code analysis pipeline — license detection, function extraction, and Rust rewriting via LLM"
-requires-python = ">=3.11"
-dependencies = [
-    "pydantic>=2.0,<3",
-    "pydantic-settings>=2.0,<3",
-    "llama-index-core>=0.12,<1",
-    "llama-index-llms-openai>=0.3,<1",
-    "tenacity>=8.0.0",
-]
+authors = ["Aliaksandr Karzhavin"]
+readme = "README.md"
+packages = [{include = "analyzer", from = "src"}]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
-    "ruff>=0.3.0",
-    "mypy>=1.9.0",
-]
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+pydantic = ">=2.0,<3"
+pydantic-settings = ">=2.0,<3"
+openai = ">=1.40.0"
+tenacity = ">=8.0.0"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+pytest-asyncio = ">=0.24"
+ruff = ">=0.3.0"
+mypy = ">=1.9.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -38,7 +35,7 @@ markers = [
 line-length = 100
 target-version = "py311"
 src = ["src"]
-exclude = [".venv", "data", "tests/fixtures/acceptance/data"]
+exclude = [".venv", ".cache", ".mypy_cache", ".pytest_cache", ".ruff_cache", "data", "tests/fixtures/acceptance/data"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "C4"]

@@ -1,14 +1,12 @@
 """LLMClient protocol — the contract every LLM backend must satisfy.
 
-Mirrors the subset of llama_index LLM API we actually use, so extractors
-and transformers depend on an abstraction, not on LlamaIndex directly.
+The extractors and transformers depend on this abstraction.
 """
 
 from __future__ import annotations
 
 from typing import Protocol, TypeVar, runtime_checkable
 
-from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
 from pydantic import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
@@ -21,7 +19,7 @@ class LLMClient(Protocol):
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs,
     ) -> T:
         """Return a Pydantic model instance from structured LLM output."""
@@ -29,10 +27,10 @@ class LLMClient(Protocol):
 
     async def apredict(
         self,
-        prompt: PromptTemplate | ChatPromptTemplate,
+        messages: list[dict[str, str]],
         **prompt_kwargs,
     ) -> str:
-        """Return a plain-text completion from a prompt template (supports roles)."""
+        """Return a plain-text completion from a list of messages with placeholders."""
         ...
 
     async def acomplete(self, prompt: str) -> str:

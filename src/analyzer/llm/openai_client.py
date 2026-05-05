@@ -1,12 +1,13 @@
-"""OpenAI implementation of LLMClient via LlamaIndex."""
+"""OpenAI implementation of LLMClient using the native SDK."""
 
 from __future__ import annotations
 
 import logging
-from typing import TypeVar
+import string
+from typing import Any, TypeVar
 
-from llama_index.core.prompts import ChatPromptTemplate, PromptTemplate
-from llama_index.llms.openai import OpenAI
+from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -15,10 +16,9 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class OpenAIClient:
-    """Thin wrapper around the LlamaIndex OpenAI LLM.
+    """Wrapper around the native OpenAI AsyncOpenAI client.
 
-    Exposes exactly the two methods our protocol requires:
-    ``astructured_predict`` and ``acomplete``.
+    Implements the LLMClient protocol.
     """
 
     def __init__(
@@ -28,35 +28,87 @@ class OpenAIClient:
         temperature: float = 0.0,
         max_tokens: int = 4096,
     ) -> None:
-        self._llm = OpenAI(
-            api_key=api_key,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        self._client = AsyncOpenAI(api_key=api_key)
+        self._model = model
+        self._temperature = temperature
+        self._max_tokens = max_tokens
 
     async def astructured_predict(
         self,
         output_cls: type[T],
-        prompt: PromptTemplate | ChatPromptTemplate,
-        **prompt_kwargs,
+        messages: list[dict[str, str]],
+        **prompt_kwargs: Any,
     ) -> T:
         """Structured prediction — returns a validated Pydantic instance."""
-        return await self._llm.astructured_predict(
-            output_cls,
-            prompt,
-            **prompt_kwargs,
+        formatted_messages = self._format_messages(messages, **prompt_kwargs)
+
+        logger.debug(f"Calling astructured_predict with model {self._model}")
+
+        completion = await self._client.beta.chat.completions.parse(
+            model=self._model,
+            messages=formatted_messages,
+            response_format=output_cls,
+            temperature=self._temperature,
+            max_tokens=self._max_tokens,
         )
+
+        message = completion.choices[0].message
+
+        # Handle explicit refusal (safety policy)
+        if message.refusal:
+            logger.warning(f"Model refused to answer: {message.refusal}")
+            raise ValueError(f"Model refused: {message.refusal}")
+
+        if message.parsed is None:
+            raise ValueError("Failed to parse structured output from OpenAI response")
+
+        return message.parsed
 
     async def apredict(
         self,
-        prompt: PromptTemplate | ChatPromptTemplate,
-        **prompt_kwargs,
+        messages: list[dict[str, str]],
+        **prompt_kwargs: Any,
     ) -> str:
-        """Plain-text prediction from template (supports roles)."""
-        return await self._llm.apredict(prompt, **prompt_kwargs)
+        """Plain-text prediction from message list with formatting."""
+        formatted_messages = self._format_messages(messages, **prompt_kwargs)
+
+        logger.debug(f"Calling apredict with model {self._model}")
+
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=formatted_messages,
+            temperature=self._temperature,
+            max_tokens=self._max_tokens,
+        )
+        return response.choices[0].message.content or ""
 
     async def acomplete(self, prompt: str) -> str:
         """Plain-text completion."""
-        response = await self._llm.acomplete(prompt)
-        return response.text
+        logger.debug(f"Calling acomplete with model {self._model}")
+
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self._temperature,
+            max_tokens=self._max_tokens,
+        )
+        return response.choices[0].message.content or ""
+
+    def _format_messages(
+        self, messages: list[dict[str, str]], **kwargs: Any
+    ) -> list[ChatCompletionMessageParam]:
+        """Safely formats messages using string.Template to avoid curly brace conflicts."""
+        if not kwargs:
+            return messages  # type: ignore[return-value]
+
+        formatted: list[ChatCompletionMessageParam] = []
+        for m in messages:
+            # Use Template so that curly braces {} in code/JSON inside the prompt
+            # don't cause an error
+            template = string.Template(m["content"])
+            # safe_substitute leaves $var as is if the variable is not provided
+            content = template.safe_substitute(**kwargs)
+            # We use Any for the message dict to bypass complex TypedDict checks for roles
+            msg: Any = {"role": m["role"], "content": content}
+            formatted.append(msg)
+        return formatted

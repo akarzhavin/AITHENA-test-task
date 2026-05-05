@@ -23,26 +23,26 @@ setup:
 	@echo "✅ Docker image built and ready."
 
 # Run tests in Docker
-test:
+test: setup
 	$(RUN_CMD) pytest -v -m "not live"
 
-test-live:
+test-live: setup
 	$(RUN_CMD) pytest -v -m "live"
 
 # Linting and formatting in Docker
-lint:
+lint: setup
 	$(RUN_CMD) ruff check .
 	$(RUN_CMD) mypy .
 
-format:
+format: setup
 	$(RUN_CMD) ruff format .
 	$(RUN_CMD) ruff check --fix .
 
 # Run analyzer in Docker
-run:
+run: setup
 	$(RUN_CMD) python -m analyzer
 
-run-rewrite:
+run-rewrite: setup
 	$(RUN_CMD) /bin/sh -c "FORCE_REWRITE=True python -m analyzer"
 
 # Run in Docker

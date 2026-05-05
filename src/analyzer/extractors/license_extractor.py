@@ -28,7 +28,7 @@ class LicenseExtractor(Protocol):
 
 
 class LicenseLLMExtractor:
-    """Extracts license metadata from source code using LlamaIndex structured prediction."""
+    """Extracts license metadata from source code using LLM structured prediction."""
 
     def __init__(self, llm: LLMClient) -> None:
         self._llm = llm

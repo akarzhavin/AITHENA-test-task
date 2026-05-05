@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # License
@@ -55,6 +58,8 @@ class FunctionList(BaseModel):
             if fn not in seen:
                 seen.add(fn)
                 unique.append(fn)
+            else:
+                logger.warning(f"Duplicate function signature found and removed: {fn.name}")
         return unique
 
     @property

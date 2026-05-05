@@ -1,4 +1,4 @@
-"""Unit tests for extractors (LlamaIndex-based)."""
+"""Unit tests for extractors (OpenAI-based)."""
 
 import pytest
 
