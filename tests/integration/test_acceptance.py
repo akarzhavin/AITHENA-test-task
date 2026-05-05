@@ -10,7 +10,9 @@ from analyzer.extractors.function_extractor import (
     FunctionLLMExtractor,
     SmartFunctionExtractor,
 )
-from analyzer.extractors.license_extractor import LicenseLLMExtractor
+from analyzer.extractors.license_extractor import LicenseLLMExtractor, SmartLicenseExtractor
+from analyzer.extractors.license_extractor import SPDX_CATEGORY_MAP
+import re
 from analyzer.models import (
     FunctionList,
     FunctionSignature,
@@ -64,14 +66,30 @@ def _prepare_mock_responses(
         with open(json_path) as f:
             golden_data = json.load(f)
 
-        # License response
-        fake_llm.enqueue(
-            LicenseInfo(
-                copyright_holder=golden_data["license_info"]["copyright_holder"],
-                license_name=golden_data["license_info"]["license_name"],
-                category=LicenseCategory(golden_data["license_info"]["category"]),
+        # Check if we need to enqueue LicenseInfo
+        # SmartLicenseExtractor bypasses LLM ONLY if both SPDX and Copyright are found
+        source = data_file.read_text(encoding="utf-8")
+        head = "\n".join(source.splitlines()[:50])
+        spdx_pattern = re.compile(r"SPDX-License-Identifier:\s*([A-Za-z0-9\.\-\+]+)", re.IGNORECASE)
+        copy_pattern = re.compile(r"Copyright\s+(?:\([cC]\)\s+)?(?:[0-9]{4}\s+)?(.+)", re.IGNORECASE)
+        
+        spdx_match = spdx_pattern.search(head)
+        copy_match = copy_pattern.search(head)
+        
+        needs_license_llm = True
+        if spdx_match and copy_match:
+            license_id = spdx_match.group(1).strip().upper()
+            if license_id in SPDX_CATEGORY_MAP:
+                needs_license_llm = False
+
+        if needs_license_llm:
+            fake_llm.enqueue(
+                LicenseInfo(
+                    copyright_holder=golden_data["license_info"]["copyright_holder"],
+                    license_name=golden_data["license_info"]["license_name"],
+                    category=LicenseCategory(golden_data["license_info"]["category"]),
+                )
             )
-        )
 
         # Determine if we need to mock function extraction or rust rewrite
         _enqueue_strategy_responses(fake_llm, data_file, golden_data, golden_dir)
@@ -85,21 +103,24 @@ def _enqueue_strategy_responses(
     is_copyleft = golden_data["license_info"]["category"] == "copyleft"
     count = golden_data.get("total_functions_in_file", 0)
 
+    # When are functions actually extracted by the pipeline?
+    extracts_functions = (not is_copyleft) or (count > 2)
+
+    # Handle LLM-based extraction (for non-python or specific fallbacks)
+    if extracts_functions and (not is_python or data_file.stem == "3"):
+        functions = [FunctionSignature(**fn) for fn in golden_data.get("extracted_functions", [])]
+        fake_llm.enqueue(FunctionList(functions=functions))
+
     # Handle Rust rewrite for copyleft <= 2
     if is_copyleft and count <= 2:
         rs_path = golden_dir / f"{data_file.stem}.rs"
         if rs_path.exists():
             fake_llm.enqueue(rs_path.read_text())
 
-    # Handle LLM-based extraction (for non-python or specific fallbacks)
-    elif not is_python or data_file.stem == "3":
-        functions = [FunctionSignature(**fn) for fn in golden_data.get("extracted_functions", [])]
-        fake_llm.enqueue(FunctionList(functions=functions))
-
 
 def _build_pipeline(llm: FakeLLMClient, data_dir: Path, output_dir: Path) -> AnalysisPipeline:
     """Wires up the pipeline with all dependencies."""
-    license_extractor = LicenseLLMExtractor(llm)
+    license_extractor = SmartLicenseExtractor(fallback=LicenseLLMExtractor(llm))
     function_extractor = SmartFunctionExtractor(fallback=FunctionLLMExtractor(llm))
     rust_rewriter = RustLLMRewriter(llm)
 

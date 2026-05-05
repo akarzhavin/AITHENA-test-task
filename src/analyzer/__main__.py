@@ -8,7 +8,7 @@ from analyzer.extractors.function_extractor import (
     FunctionLLMExtractor,
     SmartFunctionExtractor,
 )
-from analyzer.extractors.license_extractor import LicenseLLMExtractor
+from analyzer.extractors.license_extractor import LicenseLLMExtractor, SmartLicenseExtractor
 from analyzer.llm.factory import build_llm_client
 from analyzer.persistence.json_writer import JSONResultWriter
 from analyzer.pipeline import AnalysisPipeline
@@ -21,7 +21,7 @@ async def main() -> None:
 
     llm = build_llm_client(settings)
 
-    license_extractor = LicenseLLMExtractor(llm)
+    license_extractor = SmartLicenseExtractor(fallback=LicenseLLMExtractor(llm))
     # Wrap LLM extractor inside the smart AST-based extractor
     function_extractor = SmartFunctionExtractor(fallback=FunctionLLMExtractor(llm))
     rust_rewriter = RustLLMRewriter(llm)

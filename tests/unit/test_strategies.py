@@ -13,6 +13,7 @@ from analyzer.transformers.rust_rewriter import RustLLMRewriter
 class TestPermissiveStrategy:
     @pytest.mark.asyncio
     async def test_always_extracts_functions(self, fake_llm, sample_permissive):
+        """Test that PermissiveStrategy always extracts function signatures regardless of count."""
         fake_llm.enqueue(
             FunctionList(
                 functions=[
@@ -22,9 +23,7 @@ class TestPermissiveStrategy:
                 ]
             )
         )
-        extractor = FunctionLLMExtractor(fake_llm)
-        strategy = PermissiveStrategy(function_extractor=extractor)
-
+        strategy = PermissiveStrategy(function_extractor=FunctionLLMExtractor(fake_llm))
         result = await strategy.analyse(sample_permissive, "sample.py")
 
         assert result.functions is not None
@@ -33,6 +32,13 @@ class TestPermissiveStrategy:
 
 
 class TestCopyleftStrategy:
+    def _get_strategy(self, fake_llm, threshold=2):
+        return CopyleftStrategy(
+            function_extractor=FunctionLLMExtractor(fake_llm),
+            rust_rewriter=RustLLMRewriter(fake_llm),
+            function_threshold=threshold,
+        )
+
     @pytest.mark.asyncio
     async def test_many_functions_extracts(self, fake_llm, sample_copyleft_many):
         """When function count > threshold, extract signatures."""
@@ -45,14 +51,7 @@ class TestCopyleftStrategy:
                 ]
             )
         )
-        extractor = FunctionLLMExtractor(fake_llm)
-        rewriter = RustLLMRewriter(fake_llm)
-        strategy = CopyleftStrategy(
-            function_extractor=extractor,
-            rust_rewriter=rewriter,
-            function_threshold=2,
-        )
-
+        strategy = self._get_strategy(fake_llm, threshold=2)
         result = await strategy.analyse(sample_copyleft_many, "many.py")
 
         assert result.functions is not None
@@ -61,16 +60,9 @@ class TestCopyleftStrategy:
 
     @pytest.mark.asyncio
     async def test_few_functions_rewrites_rust(self, fake_llm, sample_copyleft_few):
-        """When function count ≤ threshold, rewrite to Rust."""
+        """When function count <= threshold, rewrite to Rust."""
         fake_llm.enqueue('fn only_one() {\n    println!("I am alone");\n}')
-        extractor = FunctionLLMExtractor(fake_llm)
-        rewriter = RustLLMRewriter(fake_llm)
-        strategy = CopyleftStrategy(
-            function_extractor=extractor,
-            rust_rewriter=rewriter,
-            function_threshold=2,
-        )
-
+        strategy = self._get_strategy(fake_llm, threshold=2)
         result = await strategy.analyse(sample_copyleft_few, "few.py")
 
         assert result.rust_rewrite is not None
@@ -79,32 +71,19 @@ class TestCopyleftStrategy:
 
 
 class TestRegistry:
-    def test_permissive_returns_permissive_strategy(self, fake_llm):
-        extractor = FunctionLLMExtractor(fake_llm)
-        rewriter = RustLLMRewriter(fake_llm)
+    @pytest.mark.parametrize(
+        "category, expected_class",
+        [
+            ("permissive", PermissiveStrategy),
+            ("copyleft", CopyleftStrategy),
+            ("unknown_val", PermissiveStrategy),
+        ],
+    )
+    def test_registry_resolution(self, fake_llm, category, expected_class):
+        """Verify that the registry resolves the correct strategy for each category."""
         s = strategy_for(
-            "permissive",
-            function_extractor=extractor,
-            rust_rewriter=rewriter,
+            category,
+            function_extractor=FunctionLLMExtractor(fake_llm),
+            rust_rewriter=RustLLMRewriter(fake_llm),
         )
-        assert isinstance(s, PermissiveStrategy)
-
-    def test_copyleft_returns_copyleft_strategy(self, fake_llm):
-        extractor = FunctionLLMExtractor(fake_llm)
-        rewriter = RustLLMRewriter(fake_llm)
-        s = strategy_for(
-            "copyleft",
-            function_extractor=extractor,
-            rust_rewriter=rewriter,
-        )
-        assert isinstance(s, CopyleftStrategy)
-
-    def test_unknown_defaults_to_permissive(self, fake_llm):
-        extractor = FunctionLLMExtractor(fake_llm)
-        rewriter = RustLLMRewriter(fake_llm)
-        s = strategy_for(
-            "banana",
-            function_extractor=extractor,
-            rust_rewriter=rewriter,
-        )
-        assert isinstance(s, PermissiveStrategy)
+        assert isinstance(s, expected_class)
