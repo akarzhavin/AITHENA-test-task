@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -10,9 +11,11 @@ from analyzer.extractors.function_extractor import (
     FunctionLLMExtractor,
     SmartFunctionExtractor,
 )
-from analyzer.extractors.license_extractor import LicenseLLMExtractor, SmartLicenseExtractor
-from analyzer.extractors.license_extractor import SPDX_CATEGORY_MAP
-import re
+from analyzer.extractors.license_extractor import (
+    LicenseLLMExtractor,
+    SmartLicenseExtractor,
+)
+from analyzer.extractors.license_registry import SPDX_CATEGORY_MAP
 from analyzer.models import (
     FunctionList,
     FunctionSignature,
@@ -71,11 +74,13 @@ def _prepare_mock_responses(
         source = data_file.read_text(encoding="utf-8")
         head = "\n".join(source.splitlines()[:50])
         spdx_pattern = re.compile(r"SPDX-License-Identifier:\s*([A-Za-z0-9\.\-\+]+)", re.IGNORECASE)
-        copy_pattern = re.compile(r"Copyright\s+(?:\([cC]\)\s+)?(?:[0-9]{4}\s+)?(.+)", re.IGNORECASE)
-        
+        copy_pattern = re.compile(
+            r"Copyright\s+(?:\([cC]\)\s+)?(?:[0-9]{4}\s+)?(.+)", re.IGNORECASE
+        )
+
         spdx_match = spdx_pattern.search(head)
         copy_match = copy_pattern.search(head)
-        
+
         needs_license_llm = True
         if spdx_match and copy_match:
             license_id = spdx_match.group(1).strip().upper()
@@ -103,11 +108,9 @@ def _enqueue_strategy_responses(
     is_copyleft = golden_data["license_info"]["category"] == "copyleft"
     count = golden_data.get("total_functions_in_file", 0)
 
-    # When are functions actually extracted by the pipeline?
-    extracts_functions = (not is_copyleft) or (count > 2)
-
-    # Handle LLM-based extraction (for non-python or specific fallbacks)
-    if extracts_functions and (not is_python or data_file.stem == "3"):
+    # ALL strategies now call function_extractor.extract() to get the count.
+    # We only need to enqueue if it triggers an LLM call (non-python or specific fallback).
+    if not is_python or data_file.stem == "3":
         functions = [FunctionSignature(**fn) for fn in golden_data.get("extracted_functions", [])]
         fake_llm.enqueue(FunctionList(functions=functions))
 

@@ -41,7 +41,9 @@ class TestFunctionSignature:
 class TestAnalysisResult:
     @pytest.fixture
     def base_info(self):
-        return LicenseInfo(copyright_holder="X", license_name="MIT", category=LicenseCategory.PERMISSIVE)
+        return LicenseInfo(
+            copyright_holder="X", license_name="MIT", category=LicenseCategory.PERMISSIVE
+        )
 
     def test_result_variants(self, base_info):
         """Test AnalysisResult with different optional fields (functions, rust rewrite)."""
@@ -53,14 +55,16 @@ class TestAnalysisResult:
         res_fn = AnalysisResult(
             file="test.py",
             license_info=base_info,
-            extracted_functions=[FunctionSignature(name="f", num_args=1)]
+            extracted_functions=[FunctionSignature(name="f", num_args=1)],
         )
+        assert res_fn.extracted_functions is not None
         assert len(res_fn.extracted_functions) == 1
 
         # With rust rewrite
         res_rs = AnalysisResult(
             file="test.py",
             license_info=base_info,
-            rust_rewrite=RustRewrite(rust_code="fn main() {}", source_file="test.py")
+            rust_rewrite=RustRewrite(rust_code="fn main() {}", source_file="test.py"),
         )
+        assert res_rs.rust_rewrite is not None
         assert res_rs.rust_rewrite.rust_code == "fn main() {}"

@@ -7,7 +7,6 @@ import logging
 from analyzer.extractors.function_extractor import FunctionExtractor
 from analyzer.strategies.base import StrategyOutput
 from analyzer.transformers.rust_rewriter import RustRewriter
-from analyzer.utils import count_functions
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,10 @@ class CopyleftStrategy:
         self._function_threshold = function_threshold
 
     async def analyse(self, source_code: str, filename: str) -> StrategyOutput:
-        num_functions = count_functions(source_code)
+        # We use the extractor to get an accurate count (handles multiple languages via LLM fallback)
+        functions = await self._function_extractor.extract(source_code)
+        num_functions = functions.effective_count
+
         logger.info(
             "  [copyleft] %s has %d functions (threshold=%d)",
             filename,
@@ -42,8 +44,8 @@ class CopyleftStrategy:
         )
 
         if num_functions > self._function_threshold:
-            functions = await self._function_extractor.extract(source_code)
             return StrategyOutput(total_functions=num_functions, functions=functions)
 
+        # Few functions -> Rewrite to Rust
         rust = await self._rust_rewriter.rewrite(source_code, filename)
         return StrategyOutput(total_functions=num_functions, rust_rewrite=rust)

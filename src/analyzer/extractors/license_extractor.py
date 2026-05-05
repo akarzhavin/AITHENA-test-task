@@ -8,34 +8,16 @@ from typing import Protocol, runtime_checkable
 
 from analyzer.llm.protocol import LLMClient
 from analyzer.models import LicenseCategory, LicenseInfo
+from analyzer.extractors.license_registry import SPDX_CATEGORY_MAP
 from analyzer.prompts import LICENSE_EXTRACTION_PROMPT
 
 logger = logging.getLogger(__name__)
+
 
 # Patterns and templates for fast extraction
 SPDX_PATTERN = re.compile(r"SPDX-License-Identifier:\s*([A-Za-z0-9\.\-\+]+)", re.IGNORECASE)
 COPYRIGHT_PATTERN = re.compile(r"Copyright\s+(?:\([cC]\)\s+)?(?:[0-9]{4}\s+)?(.+)", re.IGNORECASE)
 MICRO_SNIPPET_TEMPLATE = "// SPDX-License-Identifier: {license_id}\n// Copyright: {copyright}"
-
-
-# Map common SPDX identifiers to our categories
-SPDX_CATEGORY_MAP = {
-    "MIT": LicenseCategory.PERMISSIVE,
-    "APACHE-2.0": LicenseCategory.PERMISSIVE,
-    "BSD-3-CLAUSE": LicenseCategory.PERMISSIVE,
-    "BSD-2-CLAUSE": LicenseCategory.PERMISSIVE,
-    "ISC": LicenseCategory.PERMISSIVE,
-    "GPL-2.0-ONLY": LicenseCategory.COPYLEFT,
-    "GPL-2.0-OR-LATER": LicenseCategory.COPYLEFT,
-    "GPL-3.0-ONLY": LicenseCategory.COPYLEFT,
-    "GPL-3.0-OR-LATER": LicenseCategory.COPYLEFT,
-    "AGPL-3.0-ONLY": LicenseCategory.COPYLEFT,
-    "AGPL-3.0-OR-LATER": LicenseCategory.COPYLEFT,
-    "LGPL-2.1-ONLY": LicenseCategory.COPYLEFT,
-    "LGPL-2.1-OR-LATER": LicenseCategory.COPYLEFT,
-    "LGPL-3.0-ONLY": LicenseCategory.COPYLEFT,
-    "LGPL-3.0-OR-LATER": LicenseCategory.COPYLEFT,
-}
 
 
 @runtime_checkable
@@ -79,8 +61,10 @@ class SmartLicenseExtractor:
             copyright = copy_match.group(1).split("*/")[0].strip()
 
             # Normalize for dictionary lookup (e.g. mit -> MIT)
-            if (cat := SPDX_CATEGORY_MAP.get(license_id.upper())) :
-                return LicenseInfo(copyright_holder=copyright, license_name=license_id, category=cat)
+            if cat := SPDX_CATEGORY_MAP.get(license_id.upper()):
+                return LicenseInfo(
+                    copyright_holder=copyright, license_name=license_id, category=cat
+                )
 
             # If license is rare, use micro-snippet to save tokens
             return await self._fallback.extract(

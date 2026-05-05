@@ -26,7 +26,9 @@ class TestLicenseExtractor:
     )
     async def test_extracts_categories(self, fake_llm, category, name):
         """Test that LLM extractor correctly identifies various license categories."""
-        fake_llm.enqueue(LicenseInfo(copyright_holder="Alice", license_name=name, category=category))
+        fake_llm.enqueue(
+            LicenseInfo(copyright_holder="Alice", license_name=name, category=category)
+        )
         extractor = LicenseLLMExtractor(fake_llm)
         info = await extractor.extract(f"# {name} License\n# Copyright Alice")
 
@@ -36,7 +38,11 @@ class TestLicenseExtractor:
     @pytest.mark.asyncio
     async def test_unknown_category(self, fake_llm):
         """Test that unknown licenses are correctly categorized as UNKNOWN."""
-        fake_llm.enqueue(LicenseInfo(copyright_holder="Eve", license_name="Custom", category=LicenseCategory.UNKNOWN))
+        fake_llm.enqueue(
+            LicenseInfo(
+                copyright_holder="Eve", license_name="Custom", category=LicenseCategory.UNKNOWN
+            )
+        )
         extractor = LicenseLLMExtractor(fake_llm)
         info = await extractor.extract("Proprietary stuff")
         assert info.category == LicenseCategory.UNKNOWN
@@ -88,9 +94,21 @@ class TestSmartLicenseExtractor:
     @pytest.mark.parametrize(
         "code, expected_license, expected_category",
         [
-            ("// SPDX-License-Identifier: MIT\n// Copyright John", "MIT", LicenseCategory.PERMISSIVE),
-            ("// spdx-license-identifier: mit\n// Copyright Alice", "mit", LicenseCategory.PERMISSIVE),
-            ("// SPDX-License-Identifier: Apache-2.0\n// Copyright Bob", "Apache-2.0", LicenseCategory.PERMISSIVE),
+            (
+                "// SPDX-License-Identifier: MIT\n// Copyright John",
+                "MIT",
+                LicenseCategory.PERMISSIVE,
+            ),
+            (
+                "// spdx-license-identifier: mit\n// Copyright Alice",
+                "mit",
+                LicenseCategory.PERMISSIVE,
+            ),
+            (
+                "// SPDX-License-Identifier: Apache-2.0\n// Copyright Bob",
+                "Apache-2.0",
+                LicenseCategory.PERMISSIVE,
+            ),
         ],
     )
     async def test_fast_track_matches(self, fake_llm, code, expected_license, expected_category):
@@ -105,7 +123,11 @@ class TestSmartLicenseExtractor:
     @pytest.mark.asyncio
     async def test_unknown_spdx_calls_llm_with_micro_snippet(self, fake_llm):
         """Test that unknown SPDX IDs use a micro-snippet fallback to save tokens."""
-        fake_llm.enqueue(LicenseInfo(copyright_holder="Bob", license_name="MPL-2.0", category=LicenseCategory.COPYLEFT))
+        fake_llm.enqueue(
+            LicenseInfo(
+                copyright_holder="Bob", license_name="MPL-2.0", category=LicenseCategory.COPYLEFT
+            )
+        )
         extractor = SmartLicenseExtractor(LicenseLLMExtractor(fake_llm))
 
         code = "// SPDX-License-Identifier: MPL-2.0\n// Copyright Bob\n" + "x" * 1000
@@ -119,7 +141,13 @@ class TestSmartLicenseExtractor:
     @pytest.mark.asyncio
     async def test_license_found_but_author_missing_calls_full_llm(self, fake_llm):
         """Test that missing author info triggers a full-file LLM search (safety fallback)."""
-        fake_llm.enqueue(LicenseInfo(copyright_holder="Deep Author", license_name="MIT", category=LicenseCategory.PERMISSIVE))
+        fake_llm.enqueue(
+            LicenseInfo(
+                copyright_holder="Deep Author",
+                license_name="MIT",
+                category=LicenseCategory.PERMISSIVE,
+            )
+        )
         extractor = SmartLicenseExtractor(LicenseLLMExtractor(fake_llm))
 
         code = "// SPDX-License-Identifier: MIT\n" + "\n" * 60 + "// Copyright Deep Author"

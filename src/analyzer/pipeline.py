@@ -23,11 +23,13 @@ class AnalysisPipeline:
         license_extractor: LicenseExtractor,
         resolve_strategy: Callable[[str], AnalysisStrategy],
         writer: ResultWriter,
+        force_rewrite: bool = False,
     ) -> None:
         self._data_dir = data_dir
         self._license_extractor = license_extractor
         self._resolve_strategy = resolve_strategy
         self._writer = writer
+        self._force_rewrite = force_rewrite
 
     async def run(self) -> list[AnalysisResult]:
         """Analyse all files and return the collected results."""
@@ -41,11 +43,26 @@ class AnalysisPipeline:
         for path in files:
             if path.is_dir():
                 continue
+
+            if not self._force_rewrite and self._writer.exists(path.name):
+                logger.info("Skipping %s (result already exists)", path.name)
+                continue
+
             logger.info("Processing %s", path.name)
-            result = await self._process_file(path)
-            results.append(result)
+            if result := await self._safe_process_file(path):
+                results.append(result)
 
         return results
+
+    async def _safe_process_file(self, path: Path) -> AnalysisResult | None:
+        """Process a single file, catching and logging any errors to avoid pipeline crash."""
+        try:
+            return await self._process_file(path)
+        except UnicodeDecodeError:
+            logger.warning("Skipping binary or unreadable file: %s", path.name)
+        except Exception as e:
+            logger.error("Unexpected error processing %s: %s", path.name, e)
+        return None
 
     async def _process_file(self, path: Path) -> AnalysisResult:
         source = path.read_text(encoding="utf-8")

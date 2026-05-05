@@ -14,6 +14,7 @@ help:
 	@echo "  make setup       - Create virtual environment and install dependencies"
 	@echo "  make test        - Run automated tests (via pytest)"
 	@echo "  make run         - Run analysis locally"
+	@echo "  make run-rewrite - Run analysis locally with force rewrite (overwrites results)"
 	@echo "  make lint        - Check code with linters (ruff, mypy)"
 	@echo "  make format      - Format code (ruff)"
 	@echo "  make docker-run  - Run analysis in Docker via docker-compose"
@@ -42,6 +43,9 @@ format:
 # Run analyzer locally
 run:
 	$(PYTHON) -m analyzer
+
+run-rewrite:
+	FORCE_REWRITE=True $(PYTHON) -m analyzer
 
 # Run in Docker
 docker-run:

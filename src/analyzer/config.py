@@ -26,3 +26,4 @@ class Settings(BaseSettings):
 
     # --- Feature flags -------------------------------------------------------
     copyleft_function_threshold: int = 2
+    force_rewrite: bool = False

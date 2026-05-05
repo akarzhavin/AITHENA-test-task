@@ -40,6 +40,7 @@ async def main() -> None:
         license_extractor=license_extractor,
         resolve_strategy=resolve_strategy,
         writer=writer,
+        force_rewrite=settings.force_rewrite,
     )
 
     await pipeline.run()

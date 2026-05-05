@@ -57,7 +57,7 @@ class SmartFunctionExtractor:
                     functions.append(FunctionSignature(name=node.name, num_args=num_args))
 
             logger.info("  [SmartExtractor] Extracted %d functions via AST", len(functions))
-            return FunctionList(functions=functions)
+            return FunctionList(functions=functions, total_count=len(functions))
 
         except SyntaxError:
             logger.info(

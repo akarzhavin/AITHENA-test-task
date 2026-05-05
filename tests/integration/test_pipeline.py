@@ -32,6 +32,8 @@ async def test_full_pipeline_with_fixtures(fake_llm, fixtures_dir, tmp_path):
             license_name="GPL-3.0",
             category=LicenseCategory.COPYLEFT,
         ),
+        # Function extraction (now mandatory to get the count)
+        FunctionList(functions=[FunctionSignature(name="only_one", num_args=0)]),
         # Rust rewrite via acomplete (only_one function, ≤ 2 threshold)
         'fn only_one() {\n    println!("I am alone");\n}',
     )

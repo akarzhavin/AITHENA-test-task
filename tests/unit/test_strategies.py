@@ -57,17 +57,23 @@ class TestCopyleftStrategy:
         assert result.functions is not None
         assert len(result.functions.functions) == 3
         assert result.rust_rewrite is None
+        assert result.total_functions == 3
 
     @pytest.mark.asyncio
     async def test_few_functions_rewrites_rust(self, fake_llm, sample_copyleft_few):
         """When function count <= threshold, rewrite to Rust."""
+        # 1. Enqueue response for extract()
+        fake_llm.enqueue(FunctionList(functions=[FunctionSignature(name="only_one", num_args=0)]))
+        # 2. Enqueue response for rewrite()
         fake_llm.enqueue('fn only_one() {\n    println!("I am alone");\n}')
+        
         strategy = self._get_strategy(fake_llm, threshold=2)
         result = await strategy.analyse(sample_copyleft_few, "few.py")
 
         assert result.rust_rewrite is not None
         assert "fn only_one" in result.rust_rewrite.rust_code
         assert result.functions is None
+        assert result.total_functions == 1
 
 
 class TestRegistry:

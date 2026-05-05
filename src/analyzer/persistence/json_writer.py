@@ -37,3 +37,9 @@ class JSONResultWriter:
             rs_path = self._output_dir / f"{stem}.rs"
             rs_path.write_text(result.rust_rewrite.rust_code, encoding="utf-8")
             logger.info("  Wrote %s", rs_path)
+
+    def exists(self, filename: str) -> bool:
+        """Return True if the analysis file already exists."""
+        stem = Path(filename).stem
+        json_path = self._output_dir / f"{stem}_analysis.json"
+        return json_path.exists()

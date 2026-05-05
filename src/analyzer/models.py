@@ -44,6 +44,7 @@ class FunctionList(BaseModel):
     """Collection of function signatures for one file."""
 
     functions: list[FunctionSignature] = Field(default_factory=list)
+    total_count: int | None = None
 
     @field_validator("functions", mode="after")
     @classmethod
@@ -55,6 +56,11 @@ class FunctionList(BaseModel):
                 seen.add(fn)
                 unique.append(fn)
         return unique
+
+    @property
+    def effective_count(self) -> int:
+        """Return the raw count if available, otherwise the length of the deduplicated list."""
+        return self.total_count if self.total_count is not None else len(self.functions)
 
 
 # ---------------------------------------------------------------------------

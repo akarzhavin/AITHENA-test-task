@@ -14,3 +14,7 @@ class ResultWriter(Protocol):
     async def write(self, result: AnalysisResult) -> None:
         """Persist a single analysis result."""
         ...
+
+    def exists(self, filename: str) -> bool:
+        """Check if a result already exists for the given input filename."""
+        ...

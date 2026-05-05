@@ -17,10 +17,8 @@ class PermissiveStrategy:
         self._function_extractor = function_extractor
 
     async def analyse(self, source_code: str, filename: str) -> StrategyOutput:
-        from analyzer.utils import count_functions
-
-        num_functions = count_functions(source_code)
+        functions = await self._function_extractor.extract(source_code)
+        num_functions = functions.effective_count
         logger.info("  [permissive] %s has %d functions", filename, num_functions)
 
-        functions = await self._function_extractor.extract(source_code)
         return StrategyOutput(total_functions=num_functions, functions=functions)
