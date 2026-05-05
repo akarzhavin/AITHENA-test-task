@@ -44,7 +44,7 @@ class OpenAIClient:
 
         logger.debug(f"Calling astructured_predict with model {self._model}")
 
-        completion = await self._client.beta.chat.completions.parse(
+        completion = await self._client.chat.completions.parse(
             model=self._model,
             messages=formatted_messages,
             response_format=output_cls,
