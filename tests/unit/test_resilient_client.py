@@ -29,6 +29,9 @@ class ActionableFake:
     async def acomplete(self, *args, **kwargs):
         return await self._perform("ok")
 
+    async def apredict(self, *args, **kwargs):
+        return await self._perform("ok")
+
 
 class TestResilientLLMClient:
     @pytest.mark.asyncio

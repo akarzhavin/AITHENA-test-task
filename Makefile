@@ -1,59 +1,52 @@
-.PHONY: setup install test test-live run docker-run clean lint format
+.PHONY: setup test test-live run run-rewrite docker-run clean lint format
 
 # Variables
-VENV = .venv
-PYTHON = $(VENV)/bin/python
-PIP = $(VENV)/bin/pip
-PYTEST = $(VENV)/bin/pytest
-RUFF = $(VENV)/bin/ruff
-MYPY = $(VENV)/bin/mypy
+COMPOSE = docker-compose
+RUN_CMD = $(COMPOSE) run --rm analyzer
 
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  make setup       - Create virtual environment and install dependencies"
-	@echo "  make test        - Run automated tests (excluding live LLM calls)"
-	@echo "  make test-live   - Run live acceptance tests (calls real LLM APIs)"
-	@echo "  make run         - Run analysis locally"
-	@echo "  make run-rewrite - Run analysis locally with force rewrite (overwrites results)"
-	@echo "  make lint        - Check code with linters (ruff, mypy)"
-	@echo "  make format      - Format code (ruff)"
-	@echo "  make docker-run  - Run analysis in Docker via docker-compose"
+	@echo "  make setup       - Build docker image and prepare environment"
+	@echo "  make test        - Run automated tests in Docker (excluding live)"
+	@echo "  make test-live   - Run live acceptance tests in Docker"
+	@echo "  make run         - Run analysis in Docker"
+	@echo "  make run-rewrite - Run analysis in Docker with force rewrite"
+	@echo "  make lint        - Check code with linters in Docker"
+	@echo "  make format      - Format code in Docker"
+	@echo "  make docker-run  - Same as 'make run'"
 	@echo "  make clean       - Clear temporary files and output directory"
 
-# Create virtual environment and install packages
+# Build docker image
 setup:
-	python3 -m venv $(VENV)
-	$(PIP) install --upgrade pip
-	$(PIP) install -e ".[dev]"
-	@echo "✅ Environment configured. To activate, run: source .venv/bin/activate"
+	$(COMPOSE) build
+	@echo "✅ Docker image built and ready."
 
-# Run tests locally
+# Run tests in Docker
 test:
-	$(PYTEST) -v -m "not live"
+	$(RUN_CMD) pytest -v -m "not live"
 
 test-live:
-	$(PYTEST) -v -m "live"
+	$(RUN_CMD) pytest -v -m "live"
 
-# Linting and formatting
+# Linting and formatting in Docker
 lint:
-	$(RUFF) check .
-	$(MYPY) .
+	$(RUN_CMD) ruff check .
+	$(RUN_CMD) mypy .
 
 format:
-	$(RUFF) format .
-	$(RUFF) check --fix .
+	$(RUN_CMD) ruff format .
+	$(RUN_CMD) ruff check --fix .
 
-# Run analyzer locally
+# Run analyzer in Docker
 run:
-	$(PYTHON) -m analyzer
+	$(RUN_CMD) python -m analyzer
 
 run-rewrite:
-	FORCE_REWRITE=True $(PYTHON) -m analyzer
+	$(RUN_CMD) /bin/sh -c "FORCE_REWRITE=True python -m analyzer"
 
 # Run in Docker
-docker-run:
-	docker-compose up --build
+docker-run: run
 
 # Clear caches and old results
 clean:

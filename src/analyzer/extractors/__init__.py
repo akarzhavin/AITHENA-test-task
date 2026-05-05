@@ -1,1 +1,1 @@
-"""Extractors — pull structured data from source code via LLM."""
+"""Extractors for pulling license and function metadata from source code."""

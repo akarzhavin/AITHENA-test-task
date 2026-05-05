@@ -3,11 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # Подключаем файл .env, в котором должен лежать OPENAI_API_KEY
+    # Connect the .env file, which should contain OPENAI_API_KEY
     env_file:
       - .env
-    # Пробрасываем папки data/ и output/, чтобы контейнер читал входные
-    # файлы с хоста и сохранял результаты обратно на хост
+    # Mount the entire project for development and testing,
+    # as well as the data/ and output/ directories for data
     volumes:
-      - ./data:/app/data
-      - ./output:/app/output
+      - .:/app

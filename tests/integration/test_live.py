@@ -78,7 +78,7 @@ class AnalysisContext:
 def live_settings() -> Settings:
     """Load settings and verify API availability."""
     try:
-        settings = Settings()
+        settings = Settings()  # type: ignore[call-arg]
         key = settings.openai_api_key
         if not key or key.startswith("sk-YOUR") or key == "sk-...":
             pytest.skip("Skipping live test: Valid OPENAI_API_KEY not found in environment.")
@@ -101,7 +101,7 @@ def pipeline_builder(live_llm: LLMClient):
         # Dependency injection for the full stack
         llm_license = LicenseLLMExtractor(live_llm)
         llm_function = FunctionLLMExtractor(live_llm)
-        
+
         license_ext = SmartLicenseExtractor(fallback=llm_license)
         function_ext = SmartFunctionExtractor(fallback=llm_function)
         rust_rewriter = RustLLMRewriter(live_llm)
@@ -136,7 +136,7 @@ async def test_live_pipeline_full_cycle(
 ) -> None:
     """
     End-to-End verification on fixture files using real OpenAI models.
-    
+
     Verifies:
     1. Pipeline completion without crashes.
     2. Correct license categorization.
@@ -150,7 +150,7 @@ async def test_live_pipeline_full_cycle(
         source_file=source_name,
     )
     ctx.data_dir.mkdir()
-    
+
     # Copy source to isolated data dir
     ctx.source_path.write_text((DATA_DIR / source_name).read_text(encoding="utf-8"))
 
@@ -160,7 +160,7 @@ async def test_live_pipeline_full_cycle(
 
     # 3. Verification
     _verify_output_exists(ctx)
-    
+
     with open(ctx.result_path) as f:
         data = json.load(f)
         _verify_against_golden(ctx, data)
@@ -187,15 +187,18 @@ def _verify_against_golden(ctx: AnalysisContext, actual: dict[str, Any]) -> None
     # 1. License Category (Must match exactly)
     expected_cat = golden["license_info"]["category"]
     actual_cat = actual["license_info"]["category"]
-    assert actual_cat == expected_cat, \
+    assert actual_cat == expected_cat, (
         f"[{ctx.source_file}] License mismatch: expected {expected_cat}, got {actual_cat}"
+    )
 
     # 2. Function Count (Strict for Python, flexible for others)
     if ctx.source_file.endswith(".py") and "total_functions_in_file" in golden:
         expected_cnt = golden["total_functions_in_file"]
         actual_cnt = actual.get("total_functions_in_file")
-        assert actual_cnt == expected_cnt, \
-            f"[{ctx.source_file}] Function count mismatch: expected {expected_cnt}, got {actual_cnt}"
+        assert actual_cnt == expected_cnt, (
+            f"[{ctx.source_file}] Function count mismatch: "
+            f"expected {expected_cnt}, got {actual_cnt}"
+        )
 
 
 def _verify_rust_integrity(ctx: AnalysisContext, actual: dict[str, Any]) -> None:
@@ -205,7 +208,7 @@ def _verify_rust_integrity(ctx: AnalysisContext, actual: dict[str, Any]) -> None
 
     rust_code = ctx.rust_path.read_text(encoding="utf-8").strip()
     assert len(rust_code) > 20, f"Rust rewrite for {ctx.source_file} seems suspiciously short."
-    
+
     # Logic check: Rewrite should only happen for copyleft with <= 2 functions
     assert actual["license_info"]["category"] == "copyleft"
     assert actual.get("total_functions_in_file", 0) <= 2
