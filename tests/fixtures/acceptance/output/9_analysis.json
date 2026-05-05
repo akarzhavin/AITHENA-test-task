@@ -5,11 +5,15 @@
     "license_name": "MIT License",
     "category": "permissive"
   },
-  "total_functions_in_file": 1,
+  "total_functions_in_file": 2,
   "extracted_functions": [
     {
       "name": "decorator",
       "num_args": 1
+    },
+    {
+      "name": "fetch_data",
+      "num_args": 2
     }
   ]
 }

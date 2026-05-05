@@ -45,7 +45,7 @@ class SmartFunctionExtractor:
             tree = ast.parse(source_code)
             functions = []
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     # Count arguments
                     args = node.args.args
                     num_args = len(args)

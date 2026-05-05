@@ -2,6 +2,7 @@
 
 import pytest
 from llama_index.core.prompts import PromptTemplate
+from tenacity import stop_after_attempt
 
 from analyzer.llm.resilient_client import ResilientLLMClient
 from analyzer.models import LicenseCategory, LicenseInfo
@@ -38,7 +39,7 @@ class TestResilientLLMClient:
     async def test_success_on_first_attempt(self):
         """Test that it returns result immediately if base client succeeds."""
         fake = ActionableFake([None])
-        client = ResilientLLMClient(fake, max_retries=2)
+        client = ResilientLLMClient(fake, max_retries=2, wait_strategy=stop_after_attempt(0))
 
         await client.acomplete("test")
         assert fake.calls == 1
@@ -47,7 +48,7 @@ class TestResilientLLMClient:
     async def test_retry_on_transient_failure(self):
         """Test that it retries and eventually succeeds if failures are transient."""
         fake = ActionableFake([RuntimeError("Fail"), "Success"])
-        client = ResilientLLMClient(fake, max_retries=2)
+        client = ResilientLLMClient(fake, max_retries=2, wait_strategy=stop_after_attempt(0))
 
         result = await client.acomplete("test")
         assert result == "Success"
@@ -57,7 +58,7 @@ class TestResilientLLMClient:
     async def test_exhausts_retries_and_raises(self):
         """Test that it raises the last error after all retries are exhausted."""
         fake = ActionableFake([RuntimeError("E1"), RuntimeError("E2"), RuntimeError("E3")])
-        client = ResilientLLMClient(fake, max_retries=2)
+        client = ResilientLLMClient(fake, max_retries=2, wait_strategy=stop_after_attempt(0))
 
         with pytest.raises(RuntimeError, match="E3"):
             await client.acomplete("test")
@@ -70,7 +71,7 @@ class TestResilientLLMClient:
             copyright_holder="Alice", license_name="MIT", category=LicenseCategory.PERMISSIVE
         )
         fake = ActionableFake([RuntimeError("Fail"), expected])
-        client = ResilientLLMClient(fake, max_retries=2)
+        client = ResilientLLMClient(fake, max_retries=2, wait_strategy=stop_after_attempt(0))
 
         result = await client.astructured_predict(LicenseInfo, PromptTemplate("test"))
         assert result == expected

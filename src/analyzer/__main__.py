@@ -1,6 +1,7 @@
 """Composition root — wires all dependencies and runs the pipeline."""
 
 import asyncio
+import logging
 import sys
 
 from analyzer.config import Settings
@@ -17,6 +18,11 @@ from analyzer.transformers.rust_rewriter import RustLLMRewriter
 
 
 async def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
     settings = Settings()  # type: ignore[call-arg]
 
     llm = build_llm_client(settings)

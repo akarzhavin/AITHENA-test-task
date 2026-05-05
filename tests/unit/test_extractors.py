@@ -79,6 +79,18 @@ class TestSmartFunctionExtractor:
         assert len(fake_llm.prompts) == 0
 
     @pytest.mark.asyncio
+    async def test_async_functions_are_counted(self, fake_llm):
+        """Test that async def functions are correctly identified by AST."""
+        extractor = SmartFunctionExtractor(FunctionLLMExtractor(fake_llm))
+        code = "async def foo(): pass\ndef bar(): pass"
+        result = await extractor.extract(code)
+
+        assert len(result.functions) == 2
+        assert any(f.name == "foo" for f in result.functions)
+        assert any(f.name == "bar" for f in result.functions)
+        assert len(fake_llm.prompts) == 0
+
+    @pytest.mark.asyncio
     async def test_invalid_python_falls_back_to_llm(self, fake_llm):
         """Test that non-Python code triggers a fallback to the LLM extractor."""
         fake_llm.enqueue(FunctionList(functions=[FunctionSignature(name="js_func", num_args=1)]))

@@ -35,7 +35,7 @@ git clone git@github.com:akarzhavin/AITHENA-test-task.git
 cd AITHENA-test-task
 
 # Install dependencies using Makefile
-make install
+make setup
 ```
 
 ### 3. Configuration
