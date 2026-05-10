@@ -12,6 +12,7 @@ This document tracks planned improvements, technical debt, and potential new fea
 ## 🧠 LLM & Intelligence
 - [ ] 🟡 **[Medium] Local LLM Integration**: Provide a concrete implementation of `LLMClient` for [Ollama](https://ollama.com/) or [vLLM](https://github.com/vllm-project/vllm) to allow 100% offline analysis.
 - [ ] 🟡 **[Medium] Model Fallback Chain**: Extend `ResilientLLMClient` to support automatic fallback to a secondary model (e.g., from `gpt-4o` to `gpt-4o-mini`) if the primary model is unavailable or rate-limited.
+- [ ] 🟡 **[Medium] Prompt Management**: Move LLM prompts from Python strings to external `.md` files and implement a versioning system (e.g., `prompts/v1/analyzer.md`) for easier iteration and tracking.
 
 ## 🛠 Features & Architecture
 - [ ] 🔴 **[High] Professional License Detection**: Integrate **scancode-toolkit** as a primary fast-path for license and copyright identification to reduce reliance on custom regex and LLMs.
